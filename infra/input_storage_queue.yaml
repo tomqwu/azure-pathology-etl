@@ -1,0 +1,16 @@
+# dapr component name: queueinput
+componentType: bindings.azure.storagequeues
+version: v1
+metadata:
+- name: storageAccount
+  value: "ndpi"
+- name: storageAccessKey
+  value: "Gzv/NVzQeJfd0jLl6vmwXRl1WrZ96Eynbg+jnCq4VRE8XWws1XNGX7tx+dAvhmUV3lbg7cFKuzb4+ASt4owGkQ=="
+- name: queue
+  value: "ndpi"
+- name: ttlInSeconds
+  value: "60"
+- name: decodeBase64
+  value: "true"
+scopes:
+- bindingtest

@@ -1,0 +1,23 @@
+{
+    "topic": "/subscriptions/83476aec-4579-44a0-94da-74d17d5f75b5/resourceGroups/pathology-poc/providers/Microsoft.Storage/storageAccounts/ndpi",
+    "subject": "/blobServices/default/containers/input/blobs/webapp-workshop.PublishSettings",
+    "eventType": "Microsoft.Storage.BlobCreated",
+    "id": "d42a9c31-d01e-0061-04b9-8edba3061237",
+    "data": {
+        "api": "PutBlob",
+        "clientRequestId": "57ae5f02-9e1d-4da2-9f7e-2166a99c203a",
+        "requestId": "d42a9c31-d01e-0061-04b9-8edba3000000",
+        "eTag": "0x8DB5CD0BF878B53",
+        "contentType": "application/octet-stream",
+        "contentLength": 1642,
+        "blobType": "BlockBlob",
+        "url": "https://ndpi.blob.core.windows.net/input/webapp-workshop.PublishSettings",
+        "sequencer": "0000000000000000000000000000D6FB0000000000c7fc71",
+        "storageDiagnostics": {
+            "batchId": "05004c12-7006-000a-00b9-8e5c57000000"
+        }
+    },
+    "dataVersion": "",
+    "metadataVersion": "1",
+    "eventTime": "2023-05-25T03:33:03.9341395Z"
+}

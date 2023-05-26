@@ -1,0 +1,43 @@
+properties:
+  managedEnvironmentId: /subscriptions/83476aec-4579-44a0-94da-74d17d5f75b5/resourceGroups/pathology-poc/providers/Microsoft.App/managedEnvironments/pathology-poc
+  configuration:
+    activeRevisionsMode: multiple
+    ingress: 
+      external: true
+      targetPort: 6000
+    dapr:
+      appId: bindingtest
+      appPort: 6000
+      appProtocol: http
+      enabled: true
+  template:
+    containers:
+    - image: tomqwu/dicom-etl-dapr:0.1.20
+      name: dicom-etl
+      env:
+        - name: INPUT_STORAGE_ACCOUNT
+          value: SED_INPUT_STORAGE_ACCOUNT
+        - name: INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
+          value: SED_INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
+        - name: INPUT_STORAGE_CONTAINER
+          value: SED_INPUT_STORAGE_CONTAINER
+        - name: OUTPUT_STORAGE_ACCOUNT
+          value: SED_OUTPUT_STORAGE_ACCOUNT
+        - name: OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
+          value: SED_OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
+        - name: OUTPUT_STORAGE_CONTAINER
+          value: SED_OUTPUT_STORAGE_CONTAINER
+      resources:
+        cpu: 2
+        memory: 4Gi
+      volumeMounts:
+      - volumeName: azure-files-volume
+        mountPath: /blobs
+    volumes:
+    - name: azure-files-volume
+      storageType: AzureFile
+      storageName: dicom-etl
+    scale:
+      maxReplicas: 1
+      minReplicas: 1
+  
