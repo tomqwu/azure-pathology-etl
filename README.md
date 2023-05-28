@@ -1,41 +1,35 @@
-# serverless-container-ml
-
-This sample is taken from https://techcommunity.microsoft.com/t5/apps-on-azure-blog/azure-container-apps-dapr-binding-example/ba-p/3045890
-
-![](/python.png)
+# Pathology ETL
+## Overview 
 
 
-## Deploy Azure resources
+## Prerequisites
+- Python 3.6+
+- Azure CLI
+- Azure Storage Account
+- Azure Container App
 
-```
-PROJECT_NAME="dzopt5"
-LOCATION="westeurope"
 
-bash ./deploy-infra.sh $PROJECT_NAME $LOCATION
+## Setup
 
-```
-
-## Deploy Apps into Container Apps
-
-```
-PROJECT_NAME="dzopt5"
-GITHUB_REPO_OWNER="denniszielke"
-IMAGE_TAG="latest"
-
-bash ./deploy-apps.sh $PROJECT_NAME $GITHUB_REPO_OWNER $IMAGE_TAG
-
+```bash
+export LOCATION=canadacentral
+export RESOURCE_GROUP=pathology-poc # assume all resources are in the same resource group
+export CONTAINERAPP_NAME=dicom-etl
+export AZURE_FILE_SHARE_NAME_MOUNT=dicom-etl
+export INPUT_STORAGE_ACCOUNT=ndpi
+export INPUT_STORAGE_CONTAINER=input
+export OUTPUT_STORAGE_ACCOUNT=dcmoutput
+export OUTPUT_STORAGE_CONTAINER=output
+export IMAGE_URL=tomqwu/dicom-etl-dapr:0.1.20
 ```
 
-## Create test data
 
+
+```bash
+./deploy_infra.sh
+./deploy_app.sh
 ```
-export AZURE_STORAGE_CONNECTION_STRING=""
 
-MESSAGE=$(echo -n "hello from azure cli" | base64)
+## Usage
 
-az storage message put --content $MESSAGE -q requests
-
-for i in {1..300}; do for i in {1..300}; az storage message put --content $MESSAGE -q requests; done
-```
-# pathlogy-etl
-# pathlogy-etl
+drop files into input container
