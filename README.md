@@ -3,12 +3,12 @@
 
 ```plantuml
 @startuml
-
 actor DaprEventQueue
 participant "Flask App" as App
 participant "Azure Blob Storage" as Azure
-participant "Local Directory" as Local
+participant "Mounted Azure File Share" as Local
 participant "WsiDicomizer" as Wsi
+participant "Pydicom" as Pyd
 
 DaprEventQueue -> App: Event (with blob file URL)
 App -> Azure: Download blob file
@@ -16,17 +16,15 @@ Azure --> App: Blob file
 App -> Local: Save blob file
 App -> Wsi: Convert blob file to DCM
 Wsi --> App: DCM files
-App -> App: Mutate Patient ID in DCM files
+App -> Pyd: Mutate Patient ID in DCM files
+Pyd --> App: DCM files with new Patient ID
 App -> Azure: Upload DCM files
 Azure --> App: Confirmation
 App --> DaprEventQueue: Acknowledge event
-
 @enduml
-
 ```
 
-![image](./images/NP1DQiCm48NtEiMGLRl81Rme-L4BXGJQXj3rn9caGsH9oAE4vlIr1e9GLuRtlJV-xCKec2GFpc0l8O75c5wlvEKpKoOJ9yWzH_G2ipU7umMMCSu0n_9iyVAU4y7AXGFi92Gya_OqRfkRqAC3oudAEt-rfbbR-nxPSXy6lbFIpXGOqnh2_AMOTA0HFDrOVk1G74xi2FPVcsSpSQqLaGvik7aN.png)
-
+![image](./images/RP3FRi8m3CRlUGgBqtRW1NgO-DCXJGA93Q6TJMiW8asYrA4QJx_429LCExNox_Uv_Zhh6GF7pYXis0MeqOVtArd-Z1H9-GHreprQXidAO7-1kVSJm3u_Ipo_nK2mCEu0kxGAJoIUZ4jpuw9bQky8LjeGxCuOxlxQDMXA_xlNjMvSfsyKn4c3qjZ-j5aGcDwLAdl0z2tVMu6Cu6NGV8P3llIO.png)
 ## Prerequisites
 - Python 3.6+
 - Azure CLI
