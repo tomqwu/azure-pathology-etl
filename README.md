@@ -1,6 +1,31 @@
 # Pathology ETL
 ## Overview 
 
+```plantuml
+@startuml
+
+actor DaprEventQueue
+participant "Flask App" as App
+participant "Azure Blob Storage" as Azure
+participant "Local Directory" as Local
+participant "WsiDicomizer" as Wsi
+
+DaprEventQueue -> App: Event (with blob file URL)
+App -> Azure: Download blob file
+Azure --> App: Blob file
+App -> Local: Save blob file
+App -> Wsi: Convert blob file to DCM
+Wsi --> App: DCM files
+App -> App: Mutate Patient ID in DCM files
+App -> Azure: Upload DCM files
+Azure --> App: Confirmation
+App --> DaprEventQueue: Acknowledge event
+
+@enduml
+
+```
+
+![image](./images/NP1DQiCm48NtEiMGLRl81Rme-L4BXGJQXj3rn9caGsH9oAE4vlIr1e9GLuRtlJV-xCKec2GFpc0l8O75c5wlvEKpKoOJ9yWzH_G2ipU7umMMCSu0n_9iyVAU4y7AXGFi92Gya_OqRfkRqAC3oudAEt-rfbbR-nxPSXy6lbFIpXGOqnh2_AMOTA0HFDrOVk1G74xi2FPVcsSpSQqLaGvik7aN.png)
 
 ## Prerequisites
 - Python 3.6+
