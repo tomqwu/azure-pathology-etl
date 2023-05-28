@@ -1,5 +1,4 @@
 properties:
-  managedEnvironmentId: /subscriptions/83476aec-4579-44a0-94da-74d17d5f75b5/resourceGroups/pathology-poc/providers/Microsoft.App/managedEnvironments/pathology-poc
   configuration:
     activeRevisionsMode: multiple
     ingress: 
@@ -12,7 +11,7 @@ properties:
       enabled: true
   template:
     containers:
-    - image: tomqwu/dicom-etl-dapr:0.1.20
+    - image: SED_IMAGE_URL
       name: dicom-etl
       env:
         - name: INPUT_STORAGE_ACCOUNT
