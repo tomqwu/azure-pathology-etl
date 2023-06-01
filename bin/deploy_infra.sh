@@ -21,7 +21,6 @@ az eventgrid system-topic event-subscription create --name ${INPUT_WSI_TRIGGER_N
     --subject-begins-with /blobServices/default/containers/${INPUT_STORAGE_CONTAINER}/ \
     --subject-ends-with .ndpi
 
-
 # create storage file share for container mounting
 az storage share create -n ${AZURE_FILE_SHARE_NAME_MOUNT} --account-name ${INPUT_STORAGE_ACCOUNT}
 
@@ -35,7 +34,7 @@ input_storage_account_key=$(az storage account keys list -n ${INPUT_STORAGE_ACCO
 az containerapp env storage set \
   --name $CONTAINERAPP_ENVIRONMENT --resource-group $APP_RESOURCE_GROUP \
   --storage-name ${AZURE_FILE_SHARE_NAME_MOUNT} \
-  --azure-file-account-name ${AZURE_FILE_SHARE_NAME_MOUNT} \
+  --azure-file-account-name ${INPUT_STORAGE_ACCOUNT} \
   --azure-file-account-key ${input_storage_account_key} \
   --azure-file-share-name ${AZURE_FILE_SHARE_NAME_MOUNT} \
   --access-mode ReadWrite

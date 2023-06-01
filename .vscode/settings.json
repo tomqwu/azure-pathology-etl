@@ -1,0 +1,8 @@
+{
+    "yaml.schemas": {
+        "https://json.schemastore.org/yamllint.json": [
+            "file:///home/ubuntu/pathology-etl/bin/deploy_containerapp.yaml",
+            "file:///home/ubuntu/pathology-etl/bin/deploy_containerapp_template.yaml"
+        ]
+    }
+}

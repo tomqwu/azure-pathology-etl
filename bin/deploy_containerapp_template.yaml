@@ -1,42 +1,12 @@
 properties:
-  configuration:
-    activeRevisionsMode: multiple
-    ingress: 
-      external: true
-      targetPort: 6000
-    dapr:
-      appId: bindingtest
-      appPort: 6000
-      appProtocol: http
-      enabled: true
   template:
     containers:
-    - image: SED_IMAGE_URL
-      name: dicom-etl
-      env:
-        - name: INPUT_STORAGE_ACCOUNT
-          value: SED_INPUT_STORAGE_ACCOUNT
-        - name: INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
-          value: SED_INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
-        - name: INPUT_STORAGE_CONTAINER
-          value: SED_INPUT_STORAGE_CONTAINER
-        - name: OUTPUT_STORAGE_ACCOUNT
-          value: SED_OUTPUT_STORAGE_ACCOUNT
-        - name: OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
-          value: SED_OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING
-        - name: OUTPUT_STORAGE_CONTAINER
-          value: SED_OUTPUT_STORAGE_CONTAINER
-      resources:
-        cpu: 2
-        memory: 4Gi
-      volumeMounts:
-      - volumeName: azure-files-volume
-        mountPath: /blobs
+      - name: wsi-to-dicom
+        image: SED_IMAGE_URL
+        volumeMounts:
+          - volumeName: azure-files-volume
+            mountPath: /blobs
     volumes:
-    - name: azure-files-volume
-      storageType: AzureFile
-      storageName: dicom-etl
-    scale:
-      maxReplicas: 1
-      minReplicas: 1
-  
+      - name: azure-files-volume
+        storageType: AzureFile
+        storageName: SED_AZURE_FILE_SHARE_NAME_MOUNT
