@@ -36,17 +36,22 @@ App --> DaprEventQueue: Acknowledge event
 
 ```bash
 export LOCATION=canadacentral
-export RESOURCE_GROUP=pathology-poc # assume all resources are in the same resource group
-export CONTAINERAPP_NAME=dicom-etl
-export AZURE_FILE_SHARE_NAME_MOUNT=dicom-etl
-export INPUT_STORAGE_ACCOUNT=ndpi
-export INPUT_STORAGE_CONTAINER=input
-export OUTPUT_STORAGE_ACCOUNT=dcmoutput
-export OUTPUT_STORAGE_CONTAINER=output
+export INPUT_RESOURCE_GROUP=dicom-rg
+export APP_RESOURCE_GROUP=dicom-rg
+export OUTPUT_RESOURCE_GROUP=dicom-rg
+
+export INPUT_STORAGE_ACCOUNT=sphdicomviewer
+export INPUT_STORAGE_CONTAINER=wsi-input
+export OUTPUT_STORAGE_ACCOUNT=sphdicomviewer
+export OUTPUT_STORAGE_CONTAINER=dicom-output
+
+export INPUT_WSI_TRIGGER_NAME=incoming-wsi-trigger
+
+export CONTAINERAPP_NAME=wsi-to-dicom
+export CONTAINERAPP_ENVIRONMENT=wsi-to-dicom
 export IMAGE_URL=tomqwu/dicom-etl-dapr:0.1.20
+export AZURE_FILE_SHARE_NAME_MOUNT=wsi-to-dicom
 ```
-
-
 
 ```bash
 ./deploy_infra.sh

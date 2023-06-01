@@ -3,11 +3,11 @@ componentType: bindings.azure.storagequeues
 version: v1
 metadata:
 - name: storageAccount
-  value: "ndpi"
+  value: "SED_INPUT_STORAGE_ACCOUNT"
 - name: storageAccessKey
   value: "SED_STORAGE_ACCOUNT_ACCESS_KEY"
 - name: queue
-  value: "ndpi"
+  value: "SED_INPUT_STORAGE_QUEUE"
 - name: ttlInSeconds
   value: "60"
 - name: decodeBase64
