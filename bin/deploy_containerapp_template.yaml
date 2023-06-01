@@ -1,11 +1,28 @@
 properties:
+  configuration:
+    activeRevisionsMode: Multiple
+    dapr:
+      appId: bindingtest
+      appPort: 6000
+      appProtocol: http
+      enabled: true
+    ingress:
+      external: true
+      allowInsecure: false
+      targetPort: 6000
   template:
     containers:
       - name: wsi-to-dicom
         image: SED_IMAGE_URL
+        resources:
+          cpu: 2
+          memory: 4Gi
         volumeMounts:
           - volumeName: azure-files-volume
             mountPath: /blobs
+    scale:
+      minReplicas: 1
+      maxReplicas: 1
     volumes:
       - name: azure-files-volume
         storageType: AzureFile

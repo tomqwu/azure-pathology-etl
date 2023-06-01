@@ -1,215 +1,167 @@
 import os
 import datetime
-import base64
-import requests
 import json
-from gtts import gTTS
-from io import BytesIO
-from flask import Flask, request
-from wsidicomizer import WsiDicomizer
-from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
-from pydicom import dcmread
 import logging
 import random
+from flask import Flask, request
+from wsidicomizer import WsiDicomizer
+from azure.storage.blob import BlobServiceClient
+from pydicom import dcmread
+import shutil
 
-# Create a custom logger
+# Constants
+AFS_MOUNT_PATH = "/blobs"
+DICOM_DIR_PREFIX = "dicom"
+DCM_DIR_PREFIX = "dcm"
+
+# Logging setup
 logger = logging.getLogger(__name__)
-# Set level of logger
 logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
+logger.addHandler(handler)
 
-# Create handlers
-c_handler = logging.StreamHandler()
-c_handler.setLevel(logging.DEBUG)
-
-# Create formatters and add it to handlers
-c_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-c_handler.setFormatter(c_format)
-
-# Add handlers to the logger
-logger.addHandler(c_handler)
-
+# Flask app
 app = Flask(__name__)
 
-# code
-input_storage_account = os.getenv("INPUT_STORAGE_ACCOUNT")
-
+# Environment variables
 input_storage_account_connection_string = os.environ.get(
     "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING"
 )
 input_storage_container_name = os.environ.get("INPUT_STORAGE_CONTAINER", "input")
-output_storage_account = os.getenv("OUTPUT_STORAGE_ACCOUNT")
 output_storage_account_connection_string = os.environ.get(
     "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING"
 )
-output_storage_container_name = os.environ.get(
-    "OUTPUT_STORAGE_CONTAINER", "output"
-)
-afs_mount_path = os.environ.get("AFS_MOUNT_PATH", "/blobs")
+output_storage_container_name = os.environ.get("OUTPUT_STORAGE_CONTAINER", "output")
+afs_mount_path = os.environ.get("AFS_MOUNT_PATH", AFS_MOUNT_PATH)
 
-# exit app if missing required environment variables
-if (
-    input_storage_account_connection_string is None
-    or output_storage_account_connection_string is None
-):
-    logger.error("Missing required environment variables")
-    exit(1)
+# Check required environment variables
+required_vars = [
+    "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING",
+    "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING",
+]
+
+for var in required_vars:
+    if os.getenv(var) is None:
+        logger.error("Missing required environment variable %s", var)
+        exit(1)
+
 
 @app.route("/queueinput", methods=["POST"])
 def incoming():
+    """Handles incoming POST requests."""
     try:
-        incoming_text = request.get_data().decode()
-        logger.info("Message Received: %s", incoming_text)
+        data = request.get_json()
+        logger.info("Message Received: %s", data)
 
-        # Parse JSON data and get URL
-        data = json.loads(incoming_text)
         url = data.get("data", {}).get("url")
         if url is None:
             raise ValueError("Invalid data: 'data.url' field is required")
 
         logger.info("Blob File created uploaded: %s", url)
 
-        # get last '/' position and assign rest of string to blob_name
-        blob_name = url[url.rfind("/") + 1 :]
+        blob_name = url.split("/")[-1]
         logger.info("Blob Name: %s", blob_name)
 
-        input_folder = create_folder("dicom")
-        output_folder = create_folder("dcm")
-        download_file_path = get_blob_to_afs(blob_name, input_folder)
+        input_dir_path = create_dir(DICOM_DIR_PREFIX)
+        output_dir_path = create_dir(DCM_DIR_PREFIX)
+        download_file_path = get_blob_to_afs(blob_name, input_dir_path)
 
-        # convert blob file to dcm file
-        wsi_convert(download_file_path, output_folder)
+        wsi_convert(download_file_path, output_dir_path)
 
-        list_files_in_folder(input_folder)
-        list_files_in_folder(output_folder)
+        list_files_in_dir(input_dir_path)
+        list_files_in_dir(output_dir_path)
 
         logger.info("Uploading files to output storage account")
 
-        upload_dcm_files_to_output_storage_account(output_folder)
+        upload_dcm_files_to_output_storage_account(output_dir_path)
 
         logger.info("DICOM to WSI conversion completed successfully!")
 
-        cleanup(input_folder, output_folder)
+        cleanup(input_dir_path, output_dir_path)
 
-        return "Incoming message successfully processed!"
+        return "Incoming message successfully processed!", 200
 
     except Exception as e:
         logger.error("Failed to process request: %s", str(e))
-        return {"error": str(e)}, 400  # HTTP 400 Bad Request response
+        return {"error": str(e)}, 400
 
 
-# convert blob file to dcm file
-def wsi_convert(download_file_path, output_folder):
-    created_files = WsiDicomizer.convert(download_file_path, output_folder)
+def wsi_convert(download_file_path, output_dir_path):
+    """Converts blob file to dcm file."""
+    WsiDicomizer.convert(download_file_path, output_dir_path)
 
 
-# rm input_folder and output_folder
-def cleanup(input_folder, output_folder):
-    os.rmdir(input_folder)
-    os.rmdir(output_folder)
+def cleanup(input_dir_path, output_dir_path):
+    """Removes the input and output directories."""
+    shutil.rmtree(input_dir_path)
+    shutil.rmtree(output_dir_path)
     logger.info("Cleanup completed successfully!")
 
 
-def create_folder(prefix_name):
-    # Azure file share is mounted as /blobs
-    folder = (
-        afs_mount_path
-        + "/"
-        + prefix_name
-        + "-"
-        + datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
+def create_dir(prefix_name):
+    """Creates a directory in the Azure file share mount path."""
+    dir_path = os.path.join(
+        afs_mount_path, f"{prefix_name}-{datetime.datetime.now():%Y-%m-%d-%H%M%S}"
     )
+    os.makedirs(dir_path, exist_ok=True)
+    logger.info("Directory '%s' created.", dir_path)
+    return dir_path
+
+
+def list_files_in_dir(dir_path):
+    """Lists the files in a directory."""
+    logger.info("File List in %s directory:", dir_path)
     try:
-        # create the directory
-        os.mkdir(folder)
-        logger.info("Directory '%s' created.", folder)
-    except FileExistsError:
-        logger.info("Directory '%s' already exists.", folder)
-    return folder
-
-
-# List files in folder
-def list_files_in_folder(folder):
-    # print file list in folder
-    logger.info("File List in %s folder", folder)
-    try:
-        # get list of files in the directory
-        files = os.listdir(folder)
-
-        # iterate over the files and print each one
-        for file in files:
+        for file in os.listdir(dir_path):
             logger.info(file)
     except FileNotFoundError:
-        logger.error("The directory '%s' does not exist.", folder)
+        logger.error("The directory '%s' does not exist.", dir_path)
 
 
-# Download blob to AFS
-def get_blob_to_afs(blob_name, input_folder):
-    try:
-        # Create a blob client using the local file name as the name for the blob
-        blob_service_client = BlobServiceClient.from_connection_string(
-            input_storage_account_connection_string
-        )
+def get_blob_to_afs(blob_name, input_dir_path):
+    """Downloads a blob to the Azure file share."""
+    blob_service_client = BlobServiceClient.from_connection_string(
+        input_storage_account_connection_string
+    )
+    blob_client = blob_service_client.get_blob_client(
+        container=input_storage_container_name, blob=blob_name
+    )
+    download_file_path = os.path.join(input_dir_path, blob_name)
 
-        blob_client = blob_service_client.get_blob_client(
-            container=input_storage_container_name, blob=blob_name
-        )
-        download_file_path = os.path.join(input_folder, blob_name).replace(" ", "-")
+    with open(download_file_path, "wb") as download_file:
+        download_file.write(blob_client.download_blob().readall())
 
-        # Download the blob and write it to file
-        with open(download_file_path, "wb") as download_file:
-            download_file.write(blob_client.download_blob().readall())
+    logger.info("Downloaded blob '%s' to '%s'", blob_name, download_file_path)
 
-        logger.info("Downloaded blob '%s' to '%s'", blob_name, download_file_path)
-
-        return download_file_path
-    except Exception as e:
-        logger.error("Failed to download blob '%s': %s : %s : %s", blob_name, input_storage_container_name, input_storage_account_connection_string, str(e))
-        return
+    return download_file_path
 
 
-# insert_patient_id (random 7 digitals) to dcm file
 def insert_patient_id(dcm_file_path):
-    try:
-        patient_id = str(random.randint(1000000, 9999999))
-        dcm_file = dcmread(dcm_file_path)
-        dcm_file.PatientID = patient_id
-        dcm_file.save_as(dcm_file_path)
-        logger.info(
-            "Inserted patient id '%s' to '%s'", dcm_file.PatientID, dcm_file_path
+    """Inserts a patient ID into a .dcm file."""
+    dcm_file = dcmread(dcm_file_path)
+    dcm_file.PatientID = str(random.randint(1000000, 9999999))
+    dcm_file.save_as(dcm_file_path)
+    logger.info("Inserted patient id '%s' to '%s'", dcm_file.PatientID, dcm_file_path)
+
+
+def upload_dcm_files_to_output_storage_account(output_dir_path):
+    """Uploads .dcm files to the output storage account."""
+    blob_service_client = BlobServiceClient.from_connection_string(
+        output_storage_account_connection_string
+    )
+
+    for file in os.listdir(output_dir_path):
+        blob_path = os.path.join(output_dir_path, file)
+        insert_patient_id(blob_path)
+        blob_client = blob_service_client.get_blob_client(
+            container=output_storage_container_name, blob=file
         )
-    except Exception as e:
-        logger.error("Failed to insert patient id '%s': %s", patient_id, str(e))
-        return
 
+        with open(blob_path, "rb") as data:
+            blob_client.upload_blob(data)
 
-# loop over output folder for each .cdm file, upload it to output_storage_account account under output container
-def upload_dcm_files_to_output_storage_account(output_folder):
-    try:
-        # Create a blob client using the local file name as the name for the blob
-        blob_service_client = BlobServiceClient.from_connection_string(
-            output_storage_account_connection_string
-        )
-        # get list of files in the directory
-        files = os.listdir(output_folder)
-        # iterate over the files and print each one
-        for file in files:
-            blob_path = output_folder + "/" + file
-            # fix patient_id before upload
-            insert_patient_id(blob_path)
-
-            blob_client = blob_service_client.get_blob_client(
-                container=output_storage_container_name, blob=file
-            )
-            with open(blob_path, "rb") as data:
-                blob_client.upload_blob(data)
-            logger.info(
-                "Uploaded blob '%s' to '%s'", file, output_storage_container_name
-            )
-
-    except Exception as e:
-        logger.error("Failed to upload blob '%s': %s", file, str(e))
-        return
+        logger.info("Uploaded blob '%s' to '%s'", file, output_storage_container_name)
 
 
 if __name__ == "__main__":
