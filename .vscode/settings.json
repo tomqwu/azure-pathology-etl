@@ -4,5 +4,9 @@
             "file:///home/ubuntu/pathology-etl/bin/deploy_containerapp.yaml",
             "file:///home/ubuntu/pathology-etl/bin/deploy_containerapp_template.yaml"
         ]
-    }
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }

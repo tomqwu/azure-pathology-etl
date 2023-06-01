@@ -11,13 +11,6 @@ az containerapp create --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_
     --environment $CONTAINERAPP_ENVIRONMENT \
     --image $IMAGE_URL \
     --cpu 2 --memory 4Gi \
-    --env-vars "INPUT_STORAGE_ACCOUNT=$INPUT_STORAGE_ACCOUNT" \
-    --env-vars "INPUT_STORAGE_CONTAINER=$INPUT_STORAGE_CONTAINER" \
-    --env-vars "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$input_storage_connectionstring" \
-    --env-vars "OUTPUT_STORAGE_ACCOUNT=$OUTPUT_STORAGE_ACCOUNT" \
-    --env-vars "OUTPUT_STORAGE_CONTAINER=$OUTPUT_STORAGE_CONTAINER" \
-    --env-vars "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$output_storage_connectionstring" \
-    --env-vars "AZURE_FILE_SHARE_NAME_MOUNT=$AZURE_FILE_SHARE_NAME_MOUNT" \
     --ingress external \
     --target-port 6000 \
     --enable-dapr true \
@@ -32,5 +25,15 @@ az containerapp create --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_
 sed "s#SED_AZURE_FILE_SHARE_NAME_MOUNT#$AZURE_FILE_SHARE_NAME_MOUNT#g" bin/deploy_containerapp_template.yaml > bin/deploy_containerapp.yaml
 sed -i "s#SED_IMAGE_URL#$IMAGE_URL#g" bin/deploy_containerapp.yaml
 
-az containerapp update --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP --yaml b
-in/deploy_containerapp.yaml
+az containerapp update --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP --yaml bin/deploy_containerapp.yaml
+
+az containerapp update --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP \
+    --set-env-vars "INPUT_STORAGE_ACCOUNT=$INPUT_STORAGE_ACCOUNT" \
+        "INPUT_STORAGE_CONTAINER=$INPUT_STORAGE_CONTAINER" \
+        "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$input_storage_connectionstring" \
+        "OUTPUT_STORAGE_ACCOUNT=$OUTPUT_STORAGE_ACCOUNT" \
+        "OUTPUT_STORAGE_CONTAINER=$OUTPUT_STORAGE_CONTAINER" \
+        "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$output_storage_connectionstring"
+        
+az containerapp udpate --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP \
+    --image tomqwu/dicom-etl-dapr:0.1.21

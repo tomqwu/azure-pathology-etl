@@ -33,19 +33,27 @@ app = Flask(__name__)
 
 # code
 input_storage_account = os.getenv("INPUT_STORAGE_ACCOUNT")
+
 input_storage_account_connection_string = os.environ.get(
     "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING"
 )
-input_storage_container_name = os.environ.get("INPUT_STORAGE_CONTAINER_NAME", "input")
+input_storage_container_name = os.environ.get("INPUT_STORAGE_CONTAINER", "input")
 output_storage_account = os.getenv("OUTPUT_STORAGE_ACCOUNT")
 output_storage_account_connection_string = os.environ.get(
     "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING"
 )
 output_storage_container_name = os.environ.get(
-    "OUTPUT_STORAGE_CONTAINER_NAME", "output"
+    "OUTPUT_STORAGE_CONTAINER", "output"
 )
 afs_mount_path = os.environ.get("AFS_MOUNT_PATH", "/blobs")
 
+# exit app if missing required environment variables
+if (
+    input_storage_account_connection_string is None
+    or output_storage_account_connection_string is None
+):
+    logger.error("Missing required environment variables")
+    exit(1)
 
 @app.route("/queueinput", methods=["POST"])
 def incoming():
@@ -156,7 +164,7 @@ def get_blob_to_afs(blob_name, input_folder):
 
         return download_file_path
     except Exception as e:
-        logger.error("Failed to download blob '%s': %s", blob_name, str(e))
+        logger.error("Failed to download blob '%s': %s : %s : %s", blob_name, input_storage_container_name, input_storage_account_connection_string, str(e))
         return
 
 
