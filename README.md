@@ -29,6 +29,10 @@ App --> DaprEventQueue: Acknowledge event
 - Python 3.6+
 - Azure CLI
 - Azure Storage Account
+- Azure Storage Queue
+- Azure File Share
+- Azure Block Blob
+- Dapr
 - Azure Container App
 
 
