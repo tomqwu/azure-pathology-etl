@@ -49,7 +49,7 @@ export INPUT_WSI_TRIGGER_NAME=incoming-wsi-trigger
 
 export CONTAINERAPP_NAME=wsi-to-dicom
 export CONTAINERAPP_ENVIRONMENT=wsi-to-dicom
-export IMAGE_URL=tomqwu/dicom-etl-dapr:0.1.20
+export IMAGE_URL=tomqwu/dicom-etl-dapr:0.1.24
 export AZURE_FILE_SHARE_NAME_MOUNT=wsi-to-dicom
 ```
 

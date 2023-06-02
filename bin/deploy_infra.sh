@@ -39,9 +39,9 @@ az containerapp env storage set \
   --azure-file-share-name ${AZURE_FILE_SHARE_NAME_MOUNT} \
   --access-mode ReadWrite
 
-sed "s/SED_INPUT_STORAGE_ACCOUNT/$INPUT_STORAGE_ACCOUNT/g" bin/input_storage_queue_template.yaml > bin/input_storage_queue.yaml
-sed -i "s/SED_INPUT_STORAGE_QUEUE/$INPUT_WSI_TRIGGER_NAME/g" bin/input_storage_queue.yaml
-sed -i "s/SED_STORAGE_ACCOUNT_ACCESS_KEY/$input_storage_account_key/g" bin/input_storage_queue.yaml
+sed "s#SED_INPUT_STORAGE_ACCOUNT#$INPUT_STORAGE_ACCOUNT#g" bin/input_storage_queue_template.yaml > bin/input_storage_queue.yaml
+sed -i "s#SED_INPUT_STORAGE_QUEUE#$INPUT_WSI_TRIGGER_NAME#g" bin/input_storage_queue.yaml
+sed -i "s#SED_STORAGE_ACCOUNT_ACCESS_KEY#$input_storage_account_key#g" bin/input_storage_queue.yaml
 
 az containerapp env dapr-component set \
     --name $CONTAINERAPP_ENVIRONMENT  --resource-group $APP_RESOURCE_GROUP \
