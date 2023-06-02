@@ -9,13 +9,7 @@ managed_environment_id=$(az containerapp env show --name $CONTAINERAPP_ENVIRONME
 
 az containerapp create --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP \
     --environment $CONTAINERAPP_ENVIRONMENT \
-    --image $IMAGE_URL \
-    --env-vars "INPUT_STORAGE_ACCOUNT=$INPUT_STORAGE_ACCOUNT" \
-        "INPUT_STORAGE_CONTAINER=$INPUT_STORAGE_CONTAINER" \
-        "INPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$input_storage_connectionstring" \
-        "OUTPUT_STORAGE_ACCOUNT=$OUTPUT_STORAGE_ACCOUNT" \
-        "OUTPUT_STORAGE_CONTAINER=$OUTPUT_STORAGE_CONTAINER" \
-        "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$output_storage_connectionstring"
+    --image $IMAGE_URL
 
 # replace SED_AZURE_FILE_SHARE_NAME_MOUNT in deploy_containerapp_template.yaml
 sed "s#SED_AZURE_FILE_SHARE_NAME_MOUNT#$AZURE_FILE_SHARE_NAME_MOUNT#g" bin/deploy_containerapp_template.yaml > bin/deploy_containerapp.yaml
