@@ -32,4 +32,4 @@ az containerapp update --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_
         "OUTPUT_STORAGE_ACCOUNT_CONNECTIONSTRING=$output_storage_connectionstring"
 
 az containerapp udpate --name $CONTAINERAPP_NAME --resource-group $APP_RESOURCE_GROUP \
-    --image tomqwu/dicom-etl-dapr:0.1.21
+    --image tomqwu/dicom-etl-dapr:0.1.24
