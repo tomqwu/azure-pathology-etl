@@ -8,11 +8,13 @@ from wsidicomizer import WsiDicomizer
 from azure.storage.blob import BlobServiceClient
 from pydicom import dcmread
 import shutil
+from azure.core.exceptions import ResourceNotFoundError
 
 # Constants
 AFS_MOUNT_PATH = "/blobs"
 DICOM_DIR_PREFIX = "dicom"
 DCM_DIR_PREFIX = "dcm"
+BLOBS_DIR = AFS_MOUNT_PATH
 
 # Logging setup
 logger = logging.getLogger(__name__)
@@ -63,25 +65,29 @@ def incoming():
         blob_name = url.split("/")[-1]
         logger.info("Blob Name: %s", blob_name)
 
-        input_dir_path = create_dir(DICOM_DIR_PREFIX)
-        output_dir_path = create_dir(DCM_DIR_PREFIX)
-        download_file_path = get_blob_to_afs(blob_name, input_dir_path)
-
         etl_init()
 
-        wsi_convert(download_file_path, output_dir_path)
+        input_dir_path = create_dir(DICOM_DIR_PREFIX)
+        output_dir_path = create_dir(DCM_DIR_PREFIX)
 
-        list_files_in_dir(input_dir_path)
-        list_files_in_dir(output_dir_path)
+        download_file_path = get_blob_to_afs(blob_name, input_dir_path)
 
-        logger.info("Uploading files to output storage account")
+        if download_file_path is None:
+            logger.error("Failed to download blob '%s'", blob_name)
+            cleanup(input_dir_path, output_dir_path)
+            
+        else:
+            wsi_convert(download_file_path, output_dir_path)
 
-        upload_dcm_files_to_output_storage_account(output_dir_path)
+            list_files_in_dir(input_dir_path)
+            list_files_in_dir(output_dir_path)
 
-        logger.info("DICOM to WSI conversion completed successfully!")
+            logger.info("Uploading files to output storage account")
 
-        cleanup(input_dir_path, output_dir_path)
+            upload_dcm_files_to_output_storage_account(output_dir_path)
 
+            logger.info("DICOM to WSI conversion completed successfully!")
+            cleanup(input_dir_path, output_dir_path)
         return "Incoming message successfully processed!", 200
 
     except Exception as e:
@@ -100,8 +106,9 @@ def cleanup(input_dir_path, output_dir_path):
     shutil.rmtree(output_dir_path)
     logger.info("Cleanup completed successfully!")
 
+
 def etl_init():
-    BLOBS_DIR = "/blobs"
+    logger.info("Cleaning up BLOBS_DIR: %s", BLOBS_DIR)
 
     # remove all files and folders inside BLOBS_DIR
     for filename in os.listdir(BLOBS_DIR):
@@ -110,6 +117,7 @@ def etl_init():
             os.unlink(file_path)
         elif os.path.isdir(file_path):
             shutil.rmtree(file_path)
+
 
 def create_dir(prefix_name):
     """Creates a directory in the Azure file share mount path."""
@@ -127,8 +135,10 @@ def list_files_in_dir(dir_path):
     try:
         for file in os.listdir(dir_path):
             logger.info(file)
-    except FileNotFoundError:
-        logger.error("The directory '%s' does not exist.", dir_path)
+    except OSError as e:
+        logger.error(
+            "Could not list files in directory '%s'. Error: %s", dir_path, str(e)
+        )
 
 
 def get_blob_to_afs(blob_name, input_dir_path):
@@ -141,10 +151,13 @@ def get_blob_to_afs(blob_name, input_dir_path):
     )
     download_file_path = os.path.join(input_dir_path, blob_name)
 
-    with open(download_file_path, "wb") as download_file:
-        download_file.write(blob_client.download_blob().readall())
-
-    logger.info("Downloaded blob '%s' to '%s'", blob_name, download_file_path)
+    try:
+        with open(download_file_path, "wb") as download_file:
+            download_file.write(blob_client.download_blob().readall())
+        logger.info("Downloaded blob '%s' to '%s'", blob_name, download_file_path)
+    except ResourceNotFoundError:
+        logger.error("Blob '%s' does not exist.", blob_name)
+        return None
 
     return download_file_path
 
