@@ -42,12 +42,12 @@ App --> DaprEventQueue: Acknowledge event
 export LOCATION=canadacentral
 export INPUT_RESOURCE_GROUP=dicom-rg
 export APP_RESOURCE_GROUP=dicom-rg
-export OUTPUT_RESOURCE_GROUP=dicom-rg
+export OUTPUT_RESOURCE_GROUP=AHDS_sphdicomviewerws-sph-dicom-service
 
 export INPUT_STORAGE_ACCOUNT=sphdicomviewer
 export INPUT_STORAGE_CONTAINER=wsi-input
-export OUTPUT_STORAGE_ACCOUNT=sphdicomviewer
-export OUTPUT_STORAGE_CONTAINER=dicom-output
+export OUTPUT_STORAGE_ACCOUNT=cy9znq3lz73ms6c8mtq4wbgm
+export OUTPUT_STORAGE_CONTAINER=import-container
 
 export INPUT_WSI_TRIGGER_NAME=incoming-wsi-trigger
 

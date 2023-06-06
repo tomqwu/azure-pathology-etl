@@ -67,6 +67,8 @@ def incoming():
         output_dir_path = create_dir(DCM_DIR_PREFIX)
         download_file_path = get_blob_to_afs(blob_name, input_dir_path)
 
+        etl_init()
+
         wsi_convert(download_file_path, output_dir_path)
 
         list_files_in_dir(input_dir_path)
@@ -98,6 +100,16 @@ def cleanup(input_dir_path, output_dir_path):
     shutil.rmtree(output_dir_path)
     logger.info("Cleanup completed successfully!")
 
+def etl_init():
+    BLOBS_DIR = "/blobs"
+
+    # remove all files and folders inside BLOBS_DIR
+    for filename in os.listdir(BLOBS_DIR):
+        file_path = os.path.join(BLOBS_DIR, filename)
+        if os.path.isfile(file_path) or os.path.islink(file_path):
+            os.unlink(file_path)
+        elif os.path.isdir(file_path):
+            shutil.rmtree(file_path)
 
 def create_dir(prefix_name):
     """Creates a directory in the Azure file share mount path."""
