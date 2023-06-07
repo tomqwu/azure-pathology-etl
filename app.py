@@ -162,10 +162,10 @@ def get_blob_to_afs(blob_name, input_dir_path):
     return download_file_path
 
 
-def insert_patient_id(dcm_file_path):
+def insert_patient_id(dcm_file_path, patient_id):
     """Inserts a patient ID into a .dcm file."""
     dcm_file = dcmread(dcm_file_path)
-    dcm_file.PatientID = str(random.randint(1000000, 9999999))
+    dcm_file.PatientID = patient_id
     dcm_file.save_as(dcm_file_path)
     logger.info("Inserted patient id '%s' to '%s'", dcm_file.PatientID, dcm_file_path)
 
@@ -176,9 +176,10 @@ def upload_dcm_files_to_output_storage_account(output_dir_path):
         output_storage_account_connection_string
     )
 
+    patient_id = str(random.randint(1000000, 9999999))
     for file in os.listdir(output_dir_path):
         blob_path = os.path.join(output_dir_path, file)
-        insert_patient_id(blob_path)
+        insert_patient_id(blob_path, patient_id)
         blob_client = blob_service_client.get_blob_client(
             container=output_storage_container_name, blob=file
         )
