@@ -68,7 +68,7 @@ starlette==0.27.0
 tifffile==2022.10.10
 tiffslide==2.1.2
 typing_extensions==4.6.1
-urllib3==2.0.2
+urllib3==2.0.6
 uvicorn==0.22.0
 Werkzeug==2.3.4
 wsidicom==0.9.0
