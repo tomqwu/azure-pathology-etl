@@ -35,7 +35,7 @@ gTTS==2.3.2
 h11==0.14.0
 highdicom==0.20.0
 idna==3.4
-imagecodecs==2022.12.24
+imagecodecs==2023.9.18
 isodate==0.6.1
 itsdangerous==2.1.2
 Jinja2==3.1.2
